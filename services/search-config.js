@@ -3,8 +3,8 @@
 
 module.exports = {
   // Year range for movie search
-  yearStart: 1970,
-  yearEnd: 2005,
+  yearStart: 1950,
+  yearEnd: 2010,
 
   // Number of most popular movies to fetch (TMDB returns 20 per page)
   totalMovies: 500,
