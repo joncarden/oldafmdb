@@ -126,7 +126,7 @@ class FilmAgeApp {
     showLoading() {
         this.resultsContainer.innerHTML = `
             <div class="loading">
-                🎬 Finding actors who were ${this.currentAge} in memorable films...
+                🎬 Finding actors who were ${this.currentAge}. This is hard work but usually only takes 10 seconds.
             </div>
         `;
     }
