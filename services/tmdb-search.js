@@ -1,6 +1,7 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const path = require('path');
 const fs = require('fs');
+const config = require('./search-config');
 
 // Helper function to get TMDB API key
 function getTMDBKey() {
@@ -41,112 +42,85 @@ function calculateAge(birthDate, releaseDate) {
   return age;
 }
 
-async function searchActorsByAge(targetAge, gender = 'both', limit = 20) {
+async function searchActorsByAge(targetAge, gender = 'both', limit = config.resultLimit) {
   try {
     console.log(`Searching TMDB for actors aged ${targetAge}...`);
     const startTime = Date.now();
-    
-    // Search TMDB for popular movies from different decades (20+ years old)
-    // Process decades in priority order (most recent first for better results)
-    const decades = [
-      { start: 2000, end: 2005 },
-      { start: 1995, end: 1999 },
-      { start: 1990, end: 1994 },
-      { start: 1985, end: 1989 },
-      { start: 1980, end: 1984 },
-      { start: 1975, end: 1979 },
-      { start: 1970, end: 1974 }
-    ];
-    
-    const allResults = [];
-    const targetResultCount = Math.max(limit * 2, 50); // Get extra results for better filtering
-    
-    // Process decades sequentially with early termination
-    for (const decade of decades) {
-      if (allResults.length >= targetResultCount) {
-        console.log(`Early termination: Found ${allResults.length} results`);
-        break;
-      }
-      
-      const decadeResults = await searchDecadeForAge(decade.start, decade.end, targetAge, gender, targetResultCount - allResults.length);
-      allResults.push(...decadeResults);
-      
-      console.log(`Decade ${decade.start}-${decade.end}: ${decadeResults.length} results (total: ${allResults.length})`);
-    }
-    
-    // Remove duplicates and sort by relevance
-    const uniqueResults = allResults.filter((result, index, self) => 
-      index === self.findIndex(r => 
-        r.movie_tmdb_id === result.movie_tmdb_id && 
-        r.actor_tmdb_id === result.actor_tmdb_id
-      )
-    );
-    
-    // Sort by actor popularity first, then by movie popularity, then by actor prominence
-    uniqueResults.sort((a, b) => {
-      // Primary sort: Actor popularity (higher is better) - most famous actors first
-      const actorPopularityDiff = (b.actor_popularity || 0) - (a.actor_popularity || 0);
-      if (Math.abs(actorPopularityDiff) > 0.1) return actorPopularityDiff;
-      
-      // Secondary sort: Movie popularity (higher is better)
-      const moviePopularityDiff = (b.popularity_score || 0) - (a.popularity_score || 0);
-      if (Math.abs(moviePopularityDiff) > 0.1) return moviePopularityDiff;
-      
-      // Tertiary sort: Actor prominence (lower billing_order is better)
-      return (a.billing_order || 0) - (b.billing_order || 0);
-    });
-    
-    const searchTime = Date.now() - startTime;
-    console.log(`Search completed in ${searchTime}ms, found ${uniqueResults.length} unique results`);
-    
-    return formatResults(uniqueResults.slice(0, Math.max(limit, 30))); // Ensure we return at least 30 results if available
-    
-  } catch (error) {
-    throw error;
-  }
-}
 
-async function searchDecadeForAge(startYear, endYear, targetAge, gender, limit) {
-  const results = [];
-  
-  try {
-    // Search for popular English movies in this decade - reduced scope for speed
-    const response = await fetch(
-      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&sort_by=popularity.desc&primary_release_date.gte=${startYear}-01-01&primary_release_date.lte=${endYear}-12-31&vote_count.gte=50&with_original_language=en&page=1`
+    // Calculate how many pages to fetch (TMDB returns 20 movies per page)
+    const moviesPerPage = 20;
+    const totalPages = Math.ceil(config.totalMovies / moviesPerPage);
+    let allMovies = [];
+
+    // Fetch all pages of most popular movies in the year range
+    for (let page = 1; page <= totalPages; page++) {
+      const url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}` +
+        `&sort_by=popularity.desc` +
+        `&primary_release_date.gte=${config.yearStart}-01-01` +
+        `&primary_release_date.lte=${config.yearEnd}-12-31` +
+        `&with_original_language=${config.originalLanguage}` +
+        `&without_genres=${config.excludeGenreId}` +
+        `&vote_count.gte=${config.minVoteCount}` +
+        `&page=${page}`;
+      const response = await fetch(url);
+      if (!response.ok) break;
+      const data = await response.json();
+      allMovies.push(...data.results);
+      // Early exit if we have enough movies
+      if (allMovies.length >= config.totalMovies) break;
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    // Only keep the top N
+    allMovies = allMovies.slice(0, config.totalMovies);
+
+    // Remove duplicates by TMDB id
+    const uniqueMovies = allMovies.filter((movie, idx, arr) =>
+      idx === arr.findIndex(m => m.id === movie.id)
     );
-    
-    if (!response.ok) return results;
-    
-    const data = await response.json();
-    const movies = data.results.slice(0, 50); // Reduced from 200 to 50 for speed
-    
+
+    // Filter by popularity if needed
+    const filteredMovies = uniqueMovies.filter(m => (m.popularity || 0) >= config.minMoviePopularity);
+
     // Process movies in batches for better performance
-    const batchSize = 10;
-    for (let i = 0; i < movies.length; i += batchSize) {
-      // Early termination if we have enough results
-      if (results.length >= limit) {
-        console.log(`  Early termination at movie ${i}/${movies.length}, found ${results.length} results`);
-        break;
-      }
-      
-      const batch = movies.slice(i, i + batchSize);
+    const batchSize = config.batchSize;
+    let allResults = [];
+    for (let i = 0; i < filteredMovies.length; i += batchSize) {
+      if (allResults.length >= config.earlyTerminateCount) break;
+      const batch = filteredMovies.slice(i, i + batchSize);
       const batchPromises = batch.map(movie => findActorsInMovie(movie, targetAge, gender));
-      
       const batchResults = await Promise.all(batchPromises);
-      const flatResults = batchResults.flat();
-      results.push(...flatResults);
-      
-      // Reduced rate limiting - only between batches, not individual calls
-      if (i + batchSize < movies.length) {
+      allResults.push(...batchResults.flat());
+      // Small delay between batches
+      if (i + batchSize < filteredMovies.length) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
-    
+
+    // Remove duplicates and sort by relevance
+    const uniqueResults = allResults.filter((result, index, self) =>
+      index === self.findIndex(r =>
+        r.movie_tmdb_id === result.movie_tmdb_id &&
+        r.actor_tmdb_id === result.actor_tmdb_id
+      )
+    );
+
+    // Sort by actor popularity first, then by movie popularity, then by actor prominence
+    uniqueResults.sort((a, b) => {
+      const actorPopularityDiff = (b.actor_popularity || 0) - (a.actor_popularity || 0);
+      if (Math.abs(actorPopularityDiff) > 0.1) return actorPopularityDiff;
+      const moviePopularityDiff = (b.popularity_score || 0) - (a.popularity_score || 0);
+      if (Math.abs(moviePopularityDiff) > 0.1) return moviePopularityDiff;
+      return (a.billing_order || 0) - (b.billing_order || 0);
+    });
+
+    const searchTime = Date.now() - startTime;
+    console.log(`Search completed in ${searchTime}ms, found ${uniqueResults.length} unique results`);
+
+    return formatResults(uniqueResults.slice(0, Math.max(limit, config.resultLimit)));
   } catch (error) {
-    console.error(`Error searching ${startYear}-${endYear}:`, error.message);
+    throw error;
   }
-  
-  return results.slice(0, limit);
 }
 
 async function findActorsInMovie(movie, targetAge, gender) {
@@ -159,12 +133,12 @@ async function findActorsInMovie(movie, targetAge, gender) {
     if (!creditsResponse.ok) return results;
     
     const credits = await creditsResponse.json();
-    const topCast = credits.cast.slice(0, 3); // Reduced from 5 to 3 for speed
+    const topCast = credits.cast.slice(0, config.actorsPerMovie); // Use config for number of actors
     
     // Batch actor detail requests for better performance
     const actorPromises = topCast.map(async (actor, index) => {
       if (actor.known_for_department !== 'Acting') return null;
-      if (!actor.popularity || actor.popularity < 0.5) return null; // Increased threshold for better quality
+      if (!actor.popularity || actor.popularity < config.minActorPopularity) return null; // Use config for actor popularity
       
       // Skip if gender doesn't match
       if (gender === 'actors' && actor.gender !== 2) return null;
