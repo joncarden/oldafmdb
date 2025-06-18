@@ -1,17 +1,17 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+// const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
-const sharp = require('sharp');
+// const sharp = require('sharp');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const { searchActorsByAge } = require('./services/tmdb-search');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Database connection
-const dbPath = path.join(__dirname, 'database.db');
-const db = new sqlite3.Database(dbPath);
+// Database connection - DISABLED for Vercel compatibility
+// const dbPath = path.join(__dirname, 'database.db');
+// const db = new sqlite3.Database(dbPath);
 
 // Middleware
 app.use(express.json());
@@ -47,168 +47,30 @@ app.get('/api/search', async (req, res) => {
 
 // Removed caption generation - no longer needed
 
-// Generate shareable image
+// Generate shareable image - DISABLED (database required)
 app.get('/api/share/:movieId/:actorId', (req, res) => {
-  const { movieId, actorId } = req.params;
-  
-  // Get movie and actor details
-  const query = `
-    SELECT 
-      m.title,
-      m.release_year,
-      m.poster_path,
-      a.name as actor_name,
-      a.profile_path,
-      r.character_name,
-      r.age_at_filming,
-      c.caption
-    FROM movies m
-    JOIN roles r ON m.id = r.movie_id
-    JOIN actors a ON r.actor_id = a.id
-    LEFT JOIN captions c ON c.movie_id = m.id AND c.actor_id = a.id
-    WHERE m.tmdb_id = ? AND a.tmdb_id = ?
-  `;
-  
-  db.get(query, [movieId, actorId], async (err, row) => {
-    if (err || !row) {
-      return res.status(404).json({ error: 'Movie/actor combination not found' });
-    }
-    
-    try {
-      const shareImageUrl = await generateShareImage(row);
-      res.json({ 
-        shareUrl: shareImageUrl,
-        ogTitle: `${row.actor_name} was ${row.age_at_filming} in ${row.title}`,
-        ogDescription: row.caption || `${row.actor_name} played ${row.character_name} in ${row.title} (${row.release_year})`
-      });
-    } catch (error) {
-      console.error('Error generating share image:', error);
-      res.status(500).json({ error: 'Failed to generate share image' });
-    }
+  // Temporarily disabled due to database dependency
+  res.json({ 
+    error: 'Sharing temporarily disabled',
+    message: 'Share functionality requires database setup' 
   });
 });
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), mode: 'tmdb-only' });
 });
 
-// Serve share image directly
+// Serve share image directly - DISABLED (database required)
 app.get('/api/share-image/:movieId/:actorId', async (req, res) => {
-  const { movieId, actorId } = req.params;
-  
-  try {
-    const query = `
-      SELECT 
-        m.tmdb_id,
-        m.title,
-        m.release_year,
-        m.poster_path,
-        a.tmdb_id as actor_tmdb_id,
-        a.name as actor_name,
-        a.profile_path,
-        r.character_name,
-        r.age_at_filming,
-        c.caption
-      FROM movies m
-      JOIN roles r ON m.id = r.movie_id
-      JOIN actors a ON r.actor_id = a.id
-      LEFT JOIN captions c ON c.movie_id = m.id AND c.actor_id = a.id
-      WHERE m.tmdb_id = ? AND a.tmdb_id = ?
-    `;
-    
-    db.get(query, [movieId, actorId], async (err, row) => {
-      if (err || !row) {
-        return res.status(404).send('Image not found');
-      }
-      
-      try {
-        const imageUrl = await generateShareImage(row);
-        const imagePath = path.join(__dirname, 'public', imageUrl);
-        
-        if (fs.existsSync(imagePath)) {
-          res.sendFile(imagePath);
-        } else {
-          res.status(404).send('Image not found');
-        }
-      } catch (error) {
-        console.error('Error serving share image:', error);
-        res.status(500).send('Error generating image');
-      }
-    });
-  } catch (error) {
-    console.error('Error in share image endpoint:', error);
-    res.status(500).send('Server error');
-  }
+  // Redirect to a default image or return 404
+  res.status(404).send('Share images temporarily disabled');
 });
 
-// Dynamic OG tags for shared content
+// Dynamic OG tags for shared content - DISABLED (database required)
 app.get('/share/:movieId/:actorId', (req, res) => {
-  const { movieId, actorId } = req.params;
-  
-  const query = `
-    SELECT 
-      m.title,
-      m.release_year,
-      a.name as actor_name,
-      r.age_at_filming,
-      c.caption
-    FROM movies m
-    JOIN roles r ON m.id = r.movie_id
-    JOIN actors a ON r.actor_id = a.id
-    LEFT JOIN captions c ON c.movie_id = m.id AND c.actor_id = a.id
-    WHERE m.tmdb_id = ? AND a.tmdb_id = ?
-  `;
-  
-  db.get(query, [movieId, actorId], (err, row) => {
-    if (err || !row) {
-      return res.redirect('/');
-    }
-    
-    const ogTitle = `${row.actor_name} was ${row.age_at_filming} in ${row.title}`;
-    const ogDescription = row.caption || `${row.actor_name} was exactly ${row.age_at_filming} when they starred in ${row.title} (${row.release_year})`;
-    const ogImage = `${req.protocol}://${req.get('host')}/api/share-image/${movieId}/${actorId}`;
-    const ogUrl = `${req.protocol}://${req.get('host')}/share/${movieId}/${actorId}`;
-    
-    const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${ogTitle} - FilmAge</title>
-        
-        <!-- Open Graph tags -->
-        <meta property="og:title" content="${ogTitle}">
-        <meta property="og:description" content="${ogDescription}">
-        <meta property="og:image" content="${ogImage}">
-        <meta property="og:url" content="${ogUrl}">
-        <meta property="og:type" content="website">
-        <meta property="og:site_name" content="FilmAge">
-        
-        <!-- Twitter Card tags -->
-        <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:title" content="${ogTitle}">
-        <meta name="twitter:description" content="${ogDescription}">
-        <meta name="twitter:image" content="${ogImage}">
-        
-        <script>
-          // Redirect to main app after a short delay to show OG preview
-          setTimeout(() => {
-            window.location.href = '/?age=${row.age_at_filming}';
-          }, 1000);
-        </script>
-    </head>
-    <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-        <h1>FilmAge</h1>
-        <p>Redirecting you to discover more actors your age...</p>
-        <p>If you're not redirected, <a href="/?age=${row.age_at_filming}" style="color: #4ecdc4;">click here</a></p>
-    </body>
-    </html>
-    `;
-    
-    res.send(html);
-  });
+  // Redirect to main app instead of showing share page
+  res.redirect('/');
 });
 
 // Serve main app
@@ -236,6 +98,8 @@ function getTMDBKey() {
 // OpenAI integration for witty captions
 // Removed generateCaption function - no longer needed
 
+// DISABLED - Share image generation requires sharp and database
+/*
 async function generateShareImage(data) {
   try {
     // Create uploads directory if it doesn't exist
@@ -360,16 +224,17 @@ async function generateShareImage(data) {
     throw error;
   }
 }
+*/
 
 // Start server
 app.listen(PORT, () => {
   console.log(`FilmAge server running on port ${PORT}`);
-  console.log(`Database: ${dbPath}`);
+  // console.log(`Database: ${dbPath}`);
 });
 
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('Shutting down server...');
-  db.close();
+  // db.close();
   process.exit(0);
 });
