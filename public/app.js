@@ -228,12 +228,10 @@ class FilmAgeApp {
         if (!characterName || characterName === 'their character') {
             return;
         }
-        
-        // Create search query for Google Images
-        const searchQuery = encodeURIComponent(`${characterName} ${movieTitle} character`);
+        // Use movie title, actor's name, and character name only
+        const actorName = this.results[0]?.actor?.name || '';
+        const searchQuery = encodeURIComponent(`${movieTitle} ${actorName} ${characterName}`);
         const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${searchQuery}`;
-        
-        // Open in new tab
         window.open(googleImagesUrl, '_blank');
     }
 
