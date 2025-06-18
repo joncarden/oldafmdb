@@ -1,0 +1,116 @@
+Product Requirements Document (PRD)
+
+1. Overview
+
+Working title: FilmAgeA mobile‑first web app that lets users discover which actors or actresses were exactly their age when starring in memorable films released 10+ years ago, enhanced with witty, AI‑generated captions.
+
+2. Problem Statement
+
+Movie trivia sites exist, but they focus on raw data. AgeMDB proves there’s delight in age matching, yet its UX is static and its results skew modern. Users crave a more polished, nostalgia‑centric experience that feels personal and share‑worthy.
+
+3. Goals & Success Metrics
+
+Goal
+
+Metric
+
+Target
+
+Delight & surprise
+
+Avg. session NPS
+
+≥ 60
+
+Rapid gratification
+
+Time to first results
+
+≤ 0.3 s p95
+
+Virality
+
+Shares per 100 sessions
+
+≥ 25
+
+Retention
+
+Day‑7 return rate
+
+≥ 30 %
+
+4. Target Audience
+
+Casual movie fans (30‑50) killing time on mobile.
+
+Social sharers looking for light, personal content to post.
+
+Trivia buffs who enjoy deep dives via optional trivia drawers.
+
+5. Key Personas
+
+Nostalgic Millennial (‘Jamie’, 36) – wants a quick dopamine hit that links childhood favorites to personal milestones.
+
+
+6. User Journey (Happy Path)
+
+Landing hero loads with blurred marquee video.
+
+User selects age via thumb wheel.
+
+Taps one of three filter pills: Actors, Actresses, Both.
+
+Result fades in (movie poster, actor/actress headshot overlay, age badge.) 
+
+User taps on a poster to see the witty / sarcastic / roast caption.
+
+User swipes left to see more results (up to 5).
+
+Taps Share → OG‑ready image auto‑generated.
+
+7. Feature Requirements
+
+7.1 Core (MVP)
+
+#
+
+Feature
+
+Description
+
+F1
+
+Age picker
+
+Native or custom wheel; remembers last choice (localStorage).
+
+F2
+
+Gender filter
+
+Toggle pills with Lottie micro‑bounce.
+
+F3
+
+Nostalgia query
+
+SQL clause release_year ≤ (CURRENT_YEAR − 10); fallback widens age ±1 then lowers cutoff to 8 yrs.
+
+F4
+
+Results grid
+
+Lazy‑loaded poster cards, headshot overlay, badge ↗ age, GPT‑caption.
+
+F5
+
+Witty overlay
+
+Server‑side GPT‑4o creates <50‑char quip, cached indefinitely.
+
+F6
+
+Share card
+
+API stitches poster/headshot/caption → PNG; returns sharable URL with OG tags.

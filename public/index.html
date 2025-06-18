@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FilmAge - Discover Actors Your Age</title>
+    <meta name="description" content="Discover which actors were exactly your age when starring in memorable films">
+    
+    <!-- Open Graph tags for sharing -->
+    <meta property="og:title" content="FilmAge - Discover Actors Your Age">
+    <meta property="og:description" content="Find actors who were exactly your age in memorable films">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://filmage.app">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            line-height: 1.4;
+            font-weight: 400;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: left;
+            margin-bottom: 60px;
+            padding-top: 20px;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 8px;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            opacity: 0.6;
+            margin-bottom: 0;
+            font-weight: 300;
+        }
+
+        .controls {
+            background: transparent;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            padding: 24px;
+            margin-bottom: 40px;
+        }
+
+        .age-picker {
+            margin-bottom: 24px;
+        }
+
+        .age-label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            font-weight: 400;
+            color: #888888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .age-input {
+            font-family: inherit;
+            font-size: 1.2rem;
+            font-weight: 400;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            width: 60px;
+            outline: none;
+            border-bottom: 1px solid #333333;
+            transition: border-color 0.2s ease;
+        }
+
+        .age-input:focus {
+            border-bottom-color: #ffffff;
+        }
+
+        .gender-filters {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+        }
+
+        .filter-pill {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid #333333;
+            border-right: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 400;
+            color: #888888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-pill:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+
+        .filter-pill:last-child {
+            border-radius: 0 4px 4px 0;
+            border-right: 1px solid #333333;
+        }
+
+        .filter-pill:hover {
+            background: #111111;
+            color: #ffffff;
+        }
+
+        .filter-pill.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .search-button, .nav-button {
+            width: 100%;
+            padding: 12px;
+            background: #ffffff;
+            border: none;
+            border-radius: 4px;
+            color: #000000;
+            font-size: 0.85rem;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: inherit;
+        }
+
+        .search-button:hover, .nav-button:hover {
+            background: #eeeeee;
+        }
+
+        .search-button:disabled, .nav-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .results {
+            flex: 1;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .result-container {
+            position: relative;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .result-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #ffffff;
+            font-weight: 400;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .actor-highlight {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .movie-highlight {
+            color: #ffffff;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .character-highlight {
+            color: #888888;
+            font-weight: 400;
+        }
+
+        .character-link {
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.2s ease;
+        }
+
+        .character-link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .results-list {
+            max-width: 100%;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333333;
+        }
+
+        .results-header h3 {
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .back-btn {
+            font-size: 0.8rem;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid #333333;
+            color: #888888;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: #111111;
+            color: #ffffff;
+        }
+
+        .result-item {
+            padding: 20px 0;
+            border-bottom: 1px solid #222222;
+            transition: background-color 0.2s ease;
+        }
+
+        .result-item:hover {
+            background-color: #111111;
+            margin: 0 -20px;
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .year-highlight {
+            color: #888888;
+            font-weight: 400;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            gap: 16px;
+        }
+
+        .nav-button {
+            background: transparent;
+            border: 1px solid #333333;
+            color: #888888;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 400;
+            transition: all 0.2s ease;
+            flex: 1;
+            max-width: 100px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: inherit;
+        }
+
+        .nav-button:hover {
+            border-color: #666666;
+            color: #ffffff;
+        }
+
+        .nav-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .result-counter {
+            color: #888888;
+            font-weight: 400;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        .error {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.4);
+            color: #ff6b6b;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .share-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .share-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .gender-filters {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .filter-pill {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="logo">filmage</h1>
+            <p class="tagline">discover actors your age</p>
+        </div>
+
+        <div class="controls">
+            <div class="age-picker">
+                <label class="age-label" for="age">Your Age</label>
+                <input type="number" id="age" class="age-input" min="1" max="100" value="30" />
+            </div>
+
+            <div class="gender-filters">
+                <div class="filter-pill active" data-gender="both">Both</div>
+                <div class="filter-pill" data-gender="actors">Actors</div>
+                <div class="filter-pill" data-gender="actresses">Actresses</div>
+            </div>
+
+            <button class="search-button" id="searchBtn">Find My Age Matches</button>
+        </div>
+
+        <div class="results" id="results">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

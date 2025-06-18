@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.env
+database.db
+openai_credentials.txt
+uploads/
+temp/

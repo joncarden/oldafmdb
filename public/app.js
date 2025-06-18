@@ -1,0 +1,291 @@
+class FilmAgeApp {
+    constructor() {
+        this.currentAge = 30;
+        this.currentGender = 'both';
+        this.results = [];
+        this.captions = new Map();
+        this.currentResultIndex = 0;
+        this.expandedCard = null;
+        
+        this.initializeElements();
+        this.attachEventListeners();
+        this.loadFromLocalStorage();
+        this.setupCharacterClickHandlers();
+    }
+
+    initializeElements() {
+        this.ageInput = document.getElementById('age');
+        this.searchBtn = document.getElementById('searchBtn');
+        this.resultsContainer = document.getElementById('results');
+        this.genderPills = document.querySelectorAll('.filter-pill');
+    }
+
+    attachEventListeners() {
+        // Age input
+        this.ageInput.addEventListener('input', (e) => {
+            this.currentAge = parseInt(e.target.value) || 30;
+            this.saveToLocalStorage();
+        });
+
+        // Gender filter pills
+        this.genderPills.forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                this.genderPills.forEach(p => p.classList.remove('active'));
+                e.target.classList.add('active');
+                this.currentGender = e.target.dataset.gender;
+                this.saveToLocalStorage();
+            });
+        });
+
+        // Search button
+        this.searchBtn.addEventListener('click', () => {
+            this.performSearch();
+        });
+
+        // Enter key on age input
+        this.ageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.performSearch();
+            }
+        });
+    }
+
+    loadFromLocalStorage() {
+        const saved = localStorage.getItem('filmage-preferences');
+        if (saved) {
+            try {
+                const prefs = JSON.parse(saved);
+                if (prefs.age) {
+                    this.currentAge = prefs.age;
+                    this.ageInput.value = prefs.age;
+                }
+                if (prefs.gender) {
+                    this.currentGender = prefs.gender;
+                    this.genderPills.forEach(pill => {
+                        pill.classList.toggle('active', pill.dataset.gender === prefs.gender);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading preferences:', error);
+            }
+        }
+    }
+
+    saveToLocalStorage() {
+        const prefs = {
+            age: this.currentAge,
+            gender: this.currentGender
+        };
+        localStorage.setItem('filmage-preferences', JSON.stringify(prefs));
+    }
+
+    setupCharacterClickHandlers() {
+        // Use event delegation for character links
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('character-link')) {
+                const characterName = e.target.getAttribute('data-character');
+                const movieTitle = e.target.getAttribute('data-movie');
+                this.searchCharacterImages(characterName, movieTitle);
+            }
+        });
+    }
+
+    async performSearch() {
+        if (!this.currentAge || this.currentAge < 1 || this.currentAge > 100) {
+            this.showError('Please enter a valid age between 1 and 100');
+            return;
+        }
+
+        this.showLoading();
+        this.searchBtn.disabled = true;
+
+        try {
+            const response = await fetch(`/api/search?age=${this.currentAge}&gender=${this.currentGender}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            this.results = data.results || [];
+            
+            if (this.results.length === 0) {
+                this.showNoResults();
+            } else {
+                this.displayResults();
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            this.showError('Failed to search. Please try again.');
+        } finally {
+            this.searchBtn.disabled = false;
+        }
+    }
+
+    showLoading() {
+        this.resultsContainer.innerHTML = `
+            <div class="loading">
+                🎬 Finding actors who were ${this.currentAge} in memorable films...
+            </div>
+        `;
+    }
+
+    showError(message) {
+        this.resultsContainer.innerHTML = `
+            <div class="error">
+                ${message}
+            </div>
+        `;
+    }
+
+    showNoResults() {
+        this.resultsContainer.innerHTML = `
+            <div class="error">
+                No matches found for age ${this.currentAge}. Try a different age or check back later as we add more movies!
+            </div>
+        `;
+    }
+
+    displayResults() {
+        if (this.results.length === 0) return;
+        
+        this.currentResultIndex = 0;
+        this.showSingleResult();
+    }
+
+    showSingleResult() {
+        const result = this.results[0];
+        if (!result) return;
+
+        // Use gender from API if available, otherwise use 'they'
+        let pronoun = 'they';
+        if (this.currentGender === 'actors') pronoun = 'he';
+        if (this.currentGender === 'actresses') pronoun = 'she';
+        
+        const resultHtml = `
+            <div class="result-container">
+                <div class="result-text">
+                    You're the same age as 
+                    <span class="actor-highlight">${result.actor.name}</span> 
+                    was when ${pronoun} played 
+                    <span class="character-highlight character-link" data-character="${result.role.character_name}" data-movie="${result.movie.title}">${result.role.character_name || 'their character'}</span> 
+                    in <span class="movie-highlight">${result.movie.title}</span> 
+                    back in <span class="year-highlight">${result.movie.release_year}</span>.
+                </div>
+                
+                <div class="navigation">
+                    <button class="nav-button" id="next-btn" onclick="filmAge.showAllResults()">
+                        See ${this.results.length > 1 ? `all ${this.results.length} matches` : 'more info'} →
+                    </button>
+                </div>
+            </div>
+        `;
+
+        this.resultsContainer.innerHTML = resultHtml;
+    }
+
+    showAllResults() {
+        if (this.results.length === 0) return;
+        
+        const resultsHtml = this.results.map((result, index) => {
+            let pronoun = 'they';
+            if (this.currentGender === 'actors') pronoun = 'he';
+            if (this.currentGender === 'actresses') pronoun = 'she';
+            
+            return `
+                <div class="result-item" data-index="${index}">
+                    <div class="result-text">
+                        <span class="actor-highlight">${result.actor.name}</span> 
+                        was ${result.role.age_at_filming} when ${pronoun} played 
+                        <span class="character-highlight character-link" data-character="${result.role.character_name}" data-movie="${result.movie.title}">${result.role.character_name || 'their character'}</span> 
+                        in <span class="movie-highlight">${result.movie.title}</span> 
+                        <span class="year-highlight">(${result.movie.release_year})</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        const containerHtml = `
+            <div class="results-list">
+                <div class="results-header">
+                    <h3>All ${this.results.length} actors who were ${this.currentAge}:</h3>
+                    <button class="nav-button back-btn" onclick="filmAge.showSingleResult()">
+                        ← Back to single result
+                    </button>
+                </div>
+                ${resultsHtml}
+            </div>
+        `;
+
+        this.resultsContainer.innerHTML = containerHtml;
+    }
+
+
+    // Removed old navigation and caption loading functions
+
+    searchCharacterImages(characterName, movieTitle) {
+        if (!characterName || characterName === 'their character') {
+            return;
+        }
+        
+        // Create search query for Google Images
+        const searchQuery = encodeURIComponent(`${characterName} ${movieTitle} character`);
+        const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${searchQuery}`;
+        
+        // Open in new tab
+        window.open(googleImagesUrl, '_blank');
+    }
+
+    async shareResult(movieId, actorId) {
+        try {
+            const response = await fetch(`/api/share/${movieId}/${actorId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            const shareUrl = `${window.location.origin}/share/${movieId}/${actorId}`;
+            
+            if (navigator.share) {
+                // Use native sharing if available
+                await navigator.share({
+                    title: data.ogTitle,
+                    text: data.ogDescription,
+                    url: shareUrl
+                });
+            } else {
+                // Fallback to copying URL
+                await navigator.clipboard.writeText(shareUrl);
+                
+                // Show temporary feedback
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Error sharing:', error);
+            alert('Sharing failed. Please try again.');
+        }
+    }
+}
+
+// Initialize the app
+const filmAge = new FilmAgeApp();
+
+// Add some touch animations for mobile
+document.addEventListener('touchstart', function() {}, { passive: true });
+
+// Prevent zoom on double tap for better mobile UX
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+    }
+    lastTouchEnd = now;
+}, false);
