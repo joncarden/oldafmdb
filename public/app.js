@@ -157,10 +157,10 @@ class FilmAgeApp {
         const result = this.results[0];
         if (!result) return;
 
-        // Use gender from API if available, otherwise use 'they'
+        // Use individual actor's gender: 1=female (she), 2=male (he), default=they
         let pronoun = 'they';
-        if (this.currentGender === 'actors') pronoun = 'he';
-        if (this.currentGender === 'actresses') pronoun = 'she';
+        if (result.actor.gender === 1) pronoun = 'she';
+        if (result.actor.gender === 2) pronoun = 'he';
         
         const resultHtml = `
             <div class="result-container">
@@ -188,9 +188,10 @@ class FilmAgeApp {
         if (this.results.length === 0) return;
         
         const resultsHtml = this.results.map((result, index) => {
+            // Use individual actor's gender: 1=female (she), 2=male (he), default=they
             let pronoun = 'they';
-            if (this.currentGender === 'actors') pronoun = 'he';
-            if (this.currentGender === 'actresses') pronoun = 'she';
+            if (result.actor.gender === 1) pronoun = 'she';
+            if (result.actor.gender === 2) pronoun = 'he';
             
             return `
                 <div class="result-item" data-index="${index}">

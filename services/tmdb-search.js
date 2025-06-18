@@ -172,6 +172,7 @@ async function findActorsInMovie(movie, targetAge, gender) {
             popularity_score: movie.popularity,
             actor_tmdb_id: actor.id,
             actor_name: actor.name,
+            actor_gender: actor.gender,
             actor_popularity: actor.popularity, // Store actor popularity for sorting
             character_name: actor.character,
             age_at_filming: age,
@@ -205,7 +206,8 @@ function formatResults(rows) {
     },
     actor: {
       tmdb_id: row.actor_tmdb_id,
-      name: row.actor_name
+      name: row.actor_name,
+      gender: row.actor_gender
     },
     role: {
       character_name: row.character_name,

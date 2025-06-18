@@ -5,3 +5,4 @@ database.db
 openai_credentials.txt
 uploads/
 temp/
+.vercel
