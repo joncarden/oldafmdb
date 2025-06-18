@@ -114,10 +114,20 @@ async function searchActorsByAge(targetAge, gender = 'both', limit = config.resu
       return (a.billing_order || 0) - (b.billing_order || 0);
     });
 
-    const searchTime = Date.now() - startTime;
-    console.log(`Search completed in ${searchTime}ms, found ${uniqueResults.length} unique results`);
+    // Only keep the most popular movie per actor
+    const bestMoviePerActor = [];
+    const seenActors = new Set();
+    for (const result of uniqueResults) {
+      if (!seenActors.has(result.actor_tmdb_id)) {
+        bestMoviePerActor.push(result);
+        seenActors.add(result.actor_tmdb_id);
+      }
+    }
 
-    return formatResults(uniqueResults.slice(0, Math.max(limit, config.resultLimit)));
+    const searchTime = Date.now() - startTime;
+    console.log(`Search completed in ${searchTime}ms, found ${bestMoviePerActor.length} unique actors`);
+
+    return formatResults(bestMoviePerActor.slice(0, Math.max(limit, config.resultLimit)));
   } catch (error) {
     throw error;
   }
