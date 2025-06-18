@@ -85,7 +85,8 @@ class FilmAgeApp {
             if (e.target.classList.contains('character-link')) {
                 const characterName = e.target.getAttribute('data-character');
                 const movieTitle = e.target.getAttribute('data-movie');
-                this.searchCharacterImages(characterName, movieTitle);
+                const actorName = e.target.getAttribute('data-actor');
+                this.searchCharacterImages(characterName, movieTitle, actorName);
             }
         });
     }
@@ -157,7 +158,6 @@ class FilmAgeApp {
         const result = this.results[0];
         if (!result) return;
 
-        // Use individual actor's gender: 1=female (she), 2=male (he), default=they
         let pronoun = 'they';
         if (result.actor.gender === 1) pronoun = 'she';
         if (result.actor.gender === 2) pronoun = 'he';
@@ -168,7 +168,7 @@ class FilmAgeApp {
                     You're the same age as 
                     <span class="actor-highlight">${result.actor.name}</span> 
                     was when ${pronoun} played 
-                    <span class="character-highlight character-link" data-character="${result.role.character_name}" data-movie="${result.movie.title}">${result.role.character_name || 'their character'}</span> 
+                    <span class="character-highlight character-link" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> 
                     in <span class="movie-highlight">${result.movie.title}</span> 
                     back in <span class="year-highlight">${result.movie.release_year}</span>.
                 </div>
@@ -188,7 +188,6 @@ class FilmAgeApp {
         if (this.results.length === 0) return;
         
         const resultsHtml = this.results.map((result, index) => {
-            // Use individual actor's gender: 1=female (she), 2=male (he), default=they
             let pronoun = 'they';
             if (result.actor.gender === 1) pronoun = 'she';
             if (result.actor.gender === 2) pronoun = 'he';
@@ -198,7 +197,7 @@ class FilmAgeApp {
                     <div class="result-text">
                         <span class="actor-highlight">${result.actor.name}</span> 
                         was ${result.role.age_at_filming} when ${pronoun} played 
-                        <span class="character-highlight character-link" data-character="${result.role.character_name}" data-movie="${result.movie.title}">${result.role.character_name || 'their character'}</span> 
+                        <span class="character-highlight character-link" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> 
                         in <span class="movie-highlight">${result.movie.title}</span> 
                         <span class="year-highlight">(${result.movie.release_year})</span>
                     </div>
@@ -221,15 +220,10 @@ class FilmAgeApp {
         this.resultsContainer.innerHTML = containerHtml;
     }
 
-
-    // Removed old navigation and caption loading functions
-
-    searchCharacterImages(characterName, movieTitle) {
+    searchCharacterImages(characterName, movieTitle, actorName) {
         if (!characterName || characterName === 'their character') {
             return;
         }
-        // Use movie title, actor's name, and character name only
-        const actorName = this.results[0]?.actor?.name || '';
         const searchQuery = encodeURIComponent(`${movieTitle} ${actorName} ${characterName}`);
         const googleImagesUrl = `https://www.google.com/search?tbm=isch&q=${searchQuery}`;
         window.open(googleImagesUrl, '_blank');
