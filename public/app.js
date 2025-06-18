@@ -140,9 +140,15 @@ class FilmAgeApp {
     }
 
     showNoResults() {
+        let message;
+        if (this.currentGender === 'actresses') {
+            message = `We can't find any actresses who were your age. Remember: Hollywood is a sexist, ageist cesspool.`;
+        } else {
+            message = `No matches found for age ${this.currentAge}. Try a different age or check back later as we add more movies!`;
+        }
         this.resultsContainer.innerHTML = `
             <div class="error">
-                No matches found for age ${this.currentAge}. Try a different age or check back later as we add more movies!
+                ${message}
             </div>
         `;
     }
