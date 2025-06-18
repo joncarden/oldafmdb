@@ -126,7 +126,7 @@ class FilmAgeApp {
     showLoading() {
         this.resultsContainer.innerHTML = `
             <div class="loading">
-                🎬 Finding actors who were ${this.currentAge}. This is hard work but usually only takes 10 seconds.
+                searching for actors who were ${this.currentAge}. this is hard but usually only takes 10 seconds.
             </div>
         `;
     }
@@ -216,7 +216,7 @@ class FilmAgeApp {
                 <div class="results-header">
                     <h3>All ${this.results.length} actors who were ${this.currentAge}:</h3>
                     <button class="nav-button back-btn" onclick="filmAge.showSingleResult()">
-                        ← Back to single result
+                        ← back
                     </button>
                 </div>
                 ${resultsHtml}
