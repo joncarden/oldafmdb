@@ -25,7 +25,7 @@ module.exports = {
   actorsPerMovie: 4,
 
   // Minimum actor popularity to consider
-  minActorPopularity: 10,
+  minActorPopularity: 1,
 
   // Batch size for parallel movie processing
   batchSize: 10,
