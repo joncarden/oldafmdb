@@ -184,7 +184,7 @@ class FilmAgeApp {
                         You're the same age as <span class="actor-highlight font-bold">${result.actor.name}</span> was when ${pronoun} played <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> back in <span class="year-highlight text-gray-400">${result.movie.release_year}</span>.
                     </div>
                     <button class="nav-button bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-6 py-3 text-base mx-auto min-w-[180px] mt-6 shadow" id="next-btn" onclick="filmAge.showAllResults()">
-                        See ${this.results.length > 1 ? `all ${this.results.length} matches` : 'more info'} →
+                        View more
                     </button>
                 </div>
             </div>
@@ -202,23 +202,18 @@ class FilmAgeApp {
             if (result.actor.gender === 2) pronoun = 'he';
             
             return `
-                <div class="result-item bg-white/5 rounded-2xl p-6 mb-6 shadow-sm hover:bg-white/10 transition flex flex-col gap-2" data-index="${index}">
-                    <div class="result-text text-base text-white mb-2">
+                <div class="result-item bg-white/5 rounded-2xl p-6 mb-6 shadow-sm flex flex-col gap-2 items-center" data-index="${index}">
+                    <div class="result-text text-base text-white text-center">
                         <span class="actor-highlight font-bold">${result.actor.name}</span> was ${result.role.age_at_filming} when ${pronoun} played 
                         <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> <span class="year-highlight text-gray-400">(${result.movie.release_year})</span>
                     </div>
-                    <button class="share-btn bg-white/20 text-white rounded-full px-4 py-1 text-xs font-semibold flex items-center gap-2 hover:bg-white/30 transition self-start mt-1" data-index="${index}">
-                        <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 8a3 3 0 11-6 0 3 3 0 016 0zm6 8a6 6 0 00-12 0h12z' /></svg>
-                        Share
-                    </button>
                 </div>
             `;
         }).join('');
         
         const containerHtml = `
             <div class="results-list max-h-[70vh] overflow-y-auto px-1">
-                <div class="results-header flex items-center justify-between mb-8 pb-3 border-b border-white/10">
-                    <h3 class="text-lg font-semibold text-white">All ${this.results.length} actors who were ${this.currentAge}:</h3>
+                <div class="flex items-center justify-end mb-8 pb-3">
                     <button class="nav-button back-btn bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-4 py-2" onclick="filmAge.showSingleResult()">
                         ← Back
                     </button>
@@ -229,14 +224,6 @@ class FilmAgeApp {
         `;
 
         this.resultsContainer.innerHTML = containerHtml;
-
-        // Attach share button listeners
-        this.resultsContainer.querySelectorAll('.share-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const idx = e.currentTarget.getAttribute('data-index');
-                this.handleShare(idx);
-            });
-        });
     }
 
     async handleShare(index) {
