@@ -138,7 +138,7 @@ class FilmAgeApp {
                 <div id="typewriter" class="mt-8 text-white text-center text-base font-mono opacity-80"></div>
             </div>
         `;
-        this.typeTypewriter("digging through IMDB. this is hard. should be done in 10 seconds.");
+        this.typeTypewriter("digging through IMDB. this is actually very hard work. we're talking algorithms and AGI-level stuff. no big deal.should be done in 10 seconds.");
     }
 
     typeTypewriter(text) {
