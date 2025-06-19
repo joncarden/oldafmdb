@@ -97,6 +97,12 @@ class FilmAgeApp {
             return;
         }
 
+        // Hide input, show results
+        document.querySelector('.controls').classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => {
+            document.querySelector('.controls').classList.add('hidden');
+        }, 250);
+
         this.showLoading();
         this.searchBtn.disabled = true;
 
@@ -125,8 +131,11 @@ class FilmAgeApp {
 
     showLoading() {
         this.resultsContainer.innerHTML = `
-            <div class="loading">
-                searching for actors who were ${this.currentAge}. this is hard but usually only takes 10 seconds.
+            <div class="animate-pulse flex flex-col items-center gap-6 py-12">
+                <div class="w-24 h-24 rounded-full bg-white/10 mb-4"></div>
+                <div class="h-6 w-2/3 rounded bg-white/10"></div>
+                <div class="h-4 w-1/2 rounded bg-white/10"></div>
+                <div class="h-4 w-1/3 rounded bg-white/10"></div>
             </div>
         `;
     }
@@ -169,20 +178,19 @@ class FilmAgeApp {
         if (result.actor.gender === 2) pronoun = 'he';
         
         const resultHtml = `
-            <div class="result-container">
-                <div class="result-text">
-                    You're the same age as 
-                    <span class="actor-highlight">${result.actor.name}</span> 
-                    was when ${pronoun} played 
-                    <span class="character-highlight character-link" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> 
-                    in <span class="movie-highlight">${result.movie.title}</span> 
-                    back in <span class="year-highlight">${result.movie.release_year}</span>.
-                </div>
-                
-                <div class="navigation">
-                    <button class="nav-button" id="next-btn" onclick="filmAge.showAllResults()">
-                        See ${this.results.length > 1 ? `all ${this.results.length} matches` : 'more info'} →
-                    </button>
+            <div class="result-container flex flex-col items-center justify-center animate-fade-in">
+                <div class="bg-white/10 backdrop-blur-md rounded-2xl shadow-xl p-6 w-full max-w-md flex flex-col items-center mb-8">
+                    <div class="w-24 h-24 rounded-full bg-white/20 mb-4 overflow-hidden flex items-center justify-center">
+                        <span class="text-4xl">🎬</span>
+                    </div>
+                    <div class="result-text text-center text-lg font-medium text-white mb-4">
+                        You're the same age as <span class="actor-highlight font-bold">${result.actor.name}</span> was when ${pronoun} played <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> back in <span class="year-highlight text-gray-400">${result.movie.release_year}</span>.
+                    </div>
+                    <div class="navigation w-full flex justify-center">
+                        <button class="nav-button bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-6 py-2" id="next-btn" onclick="filmAge.showAllResults()">
+                            See ${this.results.length > 1 ? `all ${this.results.length} matches` : 'more info'} →
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -199,31 +207,82 @@ class FilmAgeApp {
             if (result.actor.gender === 2) pronoun = 'he';
             
             return `
-                <div class="result-item" data-index="${index}">
-                    <div class="result-text">
-                        <span class="actor-highlight">${result.actor.name}</span> 
-                        was ${result.role.age_at_filming} when ${pronoun} played 
-                        <span class="character-highlight character-link" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> 
-                        in <span class="movie-highlight">${result.movie.title}</span> 
-                        <span class="year-highlight">(${result.movie.release_year})</span>
+                <div class="result-item flex items-center gap-4 bg-white/5 rounded-xl p-4 mb-4 shadow-sm hover:bg-white/10 transition" data-index="${index}">
+                    <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
+                        <img src="https://placehold.co/80x80?text=🎬" alt="Actor headshot" class="w-full h-full object-cover" loading="lazy" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="result-text text-base text-white">
+                            <span class="actor-highlight font-bold">${result.actor.name}</span> was ${result.role.age_at_filming} when ${pronoun} played 
+                            <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> <span class="year-highlight text-gray-400">(${result.movie.release_year})</span>
+                        </div>
+                        <button class="share-btn mt-2 bg-white/20 text-white rounded-full px-4 py-1 text-xs font-semibold flex items-center gap-2 hover:bg-white/30 transition" data-index="${index}">
+                            <svg xmlns='http://www.w3.org/2000/svg' class='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 8a3 3 0 11-6 0 3 3 0 016 0zm6 8a6 6 0 00-12 0h12z' /></svg>
+                            Share
+                        </button>
                     </div>
                 </div>
             `;
         }).join('');
         
         const containerHtml = `
-            <div class="results-list">
-                <div class="results-header">
-                    <h3>All ${this.results.length} actors who were ${this.currentAge}:</h3>
-                    <button class="nav-button back-btn" onclick="filmAge.showSingleResult()">
-                        ← back
+            <div class="results-list max-h-[70vh] overflow-y-auto px-1">
+                <div class="results-header flex items-center justify-between mb-6 pb-3 border-b border-white/10">
+                    <h3 class="text-lg font-semibold text-white">All ${this.results.length} actors who were ${this.currentAge}:</h3>
+                    <button class="nav-button back-btn bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-4 py-2" onclick="filmAge.showSingleResult()">
+                        ← Back
                     </button>
                 </div>
                 ${resultsHtml}
             </div>
+            <div id="toast" class="fixed left-1/2 bottom-8 -translate-x-1/2 z-50 hidden px-4 py-2 rounded-lg bg-white text-black font-semibold shadow-lg"></div>
         `;
 
         this.resultsContainer.innerHTML = containerHtml;
+
+        // Attach share button listeners
+        this.resultsContainer.querySelectorAll('.share-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = e.currentTarget.getAttribute('data-index');
+                this.handleShare(idx);
+            });
+        });
+    }
+
+    async handleShare(index) {
+        const result = this.results[index];
+        const shareUrl = `${window.location.origin}/share/${result.movie.tmdb_id}/${result.actor.tmdb_id}`;
+        const shareText = `You're the same age as ${result.actor.name} was when they played ${result.role.character_name} in ${result.movie.title} (${result.movie.release_year})`;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'OldAFmdb',
+                    text: shareText,
+                    url: shareUrl
+                });
+            } catch (err) {
+                // User cancelled or error
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                this.showToast('Link copied!');
+            } catch (err) {
+                alert('Could not copy link');
+            }
+        }
+    }
+
+    showToast(message) {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.remove('hidden');
+        toast.classList.add('opacity-100');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+            toast.classList.remove('opacity-100');
+        }, 1800);
     }
 
     searchCharacterImages(characterName, movieTitle, actorName) {

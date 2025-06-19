@@ -419,30 +419,34 @@
             }
         }
     </style>
+    <!-- Add Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1 class="logo">OldAFmdb</h1>
-            <p class="tagline">discover the horror of finding out an actor was your age when they starred in their most famous role</p>
+<body class="bg-black text-white min-h-screen font-sans" style="font-family: 'Inter', sans-serif;">
+    <div class="container mx-auto max-w-md p-4 min-h-screen flex flex-col">
+        <div class="header text-left mb-12 pt-5">
+            <h1 class="logo text-3xl font-semibold mb-2 text-white tracking-tight">OldAFmdb</h1>
+            <p class="tagline text-base opacity-60 font-light mb-0">discover the horror of finding out an actor was your age when they starred in their most famous role</p>
         </div>
 
-        <div class="controls">
-            <div class="age-picker">
-                <label class="age-label" for="age">your age</label>
-                <input type="number" id="age" class="age-input" min="1" max="100" value="30" />
+        <div class="controls bg-white/5 border border-white/10 rounded-xl p-6 mb-10 shadow-lg backdrop-blur-md">
+            <div class="age-picker mb-6">
+                <label class="age-label block text-xs mb-2 font-semibold uppercase tracking-widest text-gray-400" for="age">your age</label>
+                <input type="number" id="age" class="age-input bg-transparent border-b border-gray-700 text-lg text-white w-16 focus:outline-none focus:border-white transition" min="1" max="100" value="30" />
             </div>
 
-            <div class="gender-filters">
-                <div class="filter-pill active" data-gender="both">both</div>
-                <div class="filter-pill" data-gender="actors">boys</div>
-                <div class="filter-pill" data-gender="actresses">girls</div>
+            <div class="gender-filters flex gap-2 mb-6">
+                <div class="filter-pill active px-4 py-2 rounded-l-lg border border-gray-700 bg-white/10 text-white font-semibold uppercase text-xs cursor-pointer transition" data-gender="both">both</div>
+                <div class="filter-pill px-4 py-2 border-t border-b border-gray-700 bg-white/5 text-gray-300 uppercase text-xs cursor-pointer transition" data-gender="actors">boys</div>
+                <div class="filter-pill px-4 py-2 rounded-r-lg border border-gray-700 bg-white/5 text-gray-300 uppercase text-xs cursor-pointer transition" data-gender="actresses">girls</div>
             </div>
 
-            <button class="search-button" id="searchBtn">show me</button>
+            <button class="search-button w-full py-3 bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200" id="searchBtn">show me</button>
         </div>
 
-        <div class="results" id="results">
+        <div class="results flex-1 mt-5 relative" id="results">
             <!-- Results will be populated here -->
         </div>
     </div>
