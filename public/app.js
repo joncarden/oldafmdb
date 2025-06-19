@@ -213,34 +213,60 @@ class FilmAgeApp {
     showAllResults() {
         if (this.results.length === 0) return;
         
-        const resultsHtml = this.results.map((result, index) => {
+        // Track current card index for swipe navigation
+        this.currentResultIndex = 0;
+        const renderCard = (index) => {
+            const result = this.results[index];
             let pronoun = 'they';
             if (result.actor.gender === 1) pronoun = 'she';
             if (result.actor.gender === 2) pronoun = 'he';
-            
             return `
-                <div class="result-item bg-white/5 rounded-2xl py-12 px-8 mb-10 shadow-sm flex flex-col items-center max-w-xl mx-auto" data-index="${index}">
-                    <div class="result-text text-2xl text-white text-center">
+                <div class="result-item bg-white/5 rounded-2xl shadow-sm flex flex-col items-center justify-center max-w-xl mx-auto min-h-[80vh] my-6 px-4 md:px-8" style="touch-action: pan-y;">
+                    <div class="result-text text-2xl text-white text-center flex-1 flex flex-col justify-center">
                         <span class="actor-highlight font-bold">${result.actor.name}</span> was ${result.role.age_at_filming} when ${pronoun} played 
                         <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> <span class="year-highlight text-gray-400">(${result.movie.release_year})</span>
                     </div>
                 </div>
             `;
-        }).join('');
-        
+        };
+
         const containerHtml = `
-            <div class="results-list max-h-[70vh] overflow-y-auto px-1">
-                <div class="flex items-center justify-end mb-8 pb-3">
+            <div class="results-list w-full h-full flex flex-col items-center justify-center">
+                <div class="flex items-center justify-end mb-4 pb-3 w-full max-w-xl mx-auto">
                     <button class="nav-button back-btn bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-4 py-2" onclick="filmAge.showSingleResult()">
                         ← Back
                     </button>
                 </div>
-                ${resultsHtml}
+                <div id="card-swipe-container" class="w-full flex-1 flex flex-col justify-center items-center">
+                    ${renderCard(this.currentResultIndex)}
+                </div>
             </div>
             <div id="toast" class="fixed left-1/2 bottom-8 -translate-x-1/2 z-50 hidden px-4 py-2 rounded-lg bg-white text-black font-semibold shadow-lg"></div>
         `;
 
         this.resultsContainer.innerHTML = containerHtml;
+
+        // Add swipe up gesture for mobile
+        const cardContainer = document.getElementById('card-swipe-container');
+        let startY = null;
+        cardContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                startY = e.touches[0].clientY;
+            }
+        });
+        cardContainer.addEventListener('touchend', (e) => {
+            if (startY !== null && e.changedTouches.length === 1) {
+                const endY = e.changedTouches[0].clientY;
+                if (startY - endY > 60) { // swipe up
+                    this.currentResultIndex = Math.min(this.currentResultIndex + 1, this.results.length - 1);
+                    cardContainer.innerHTML = renderCard(this.currentResultIndex);
+                } else if (endY - startY > 60) { // swipe down
+                    this.currentResultIndex = Math.max(this.currentResultIndex - 1, 0);
+                    cardContainer.innerHTML = renderCard(this.currentResultIndex);
+                }
+                startY = null;
+            }
+        });
     }
 
     async handleShare(index) {
