@@ -183,7 +183,7 @@ class FilmAgeApp {
                     <div class="result-text text-center text-lg font-medium text-white mb-8">
                         You're the same age as <span class="actor-highlight font-bold">${result.actor.name}</span> was when ${pronoun} played <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> back in <span class="year-highlight text-gray-400">${result.movie.release_year}</span>.
                     </div>
-                    <button class="nav-button bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-6 py-2 text-sm mx-auto block" id="next-btn" onclick="filmAge.showAllResults()">
+                    <button class="nav-button bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-6 py-3 text-base mx-auto min-w-[180px] mt-6 shadow" id="next-btn" onclick="filmAge.showAllResults()">
                         See ${this.results.length > 1 ? `all ${this.results.length} matches` : 'more info'} →
                     </button>
                 </div>
