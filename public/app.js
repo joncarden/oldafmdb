@@ -219,8 +219,8 @@ class FilmAgeApp {
             if (result.actor.gender === 2) pronoun = 'he';
             
             return `
-                <div class="result-item bg-white/5 rounded-2xl flex flex-col justify-center items-center py-12 px-8 mb-10 shadow-sm" data-index="${index}">
-                    <div class="result-text text-2xl text-white text-center">
+                <div class="result-item bg-white/5 rounded-2xl flex flex-col justify-center items-center h-72 px-8 mb-10 shadow-sm" data-index="${index}">
+                    <div class="result-text text-2xl text-white text-center m-0">
                         <span class="actor-highlight font-bold">${result.actor.name}</span> was ${result.role.age_at_filming} when ${pronoun} played 
                         <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> <span class="year-highlight text-gray-400">(${result.movie.release_year})</span>
                     </div>
@@ -230,8 +230,8 @@ class FilmAgeApp {
         
         const containerHtml = `
             <div class="results-list max-h-[70vh] overflow-y-auto px-1">
-                <div class="flex items-center justify-end mb-8 pb-3">
-                    <button class="nav-button back-btn bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-4 py-2" onclick="filmAge.showSingleResult()">
+                <div class="flex items-center justify-end mb-2 pb-1">
+                    <button class="nav-button back-btn bg-white text-black rounded-lg font-bold uppercase tracking-widest transition hover:bg-gray-200 px-4 py-1" onclick="filmAge.showInputScreen()">
                         ← Back
                     </button>
                 </div>
@@ -323,6 +323,12 @@ class FilmAgeApp {
             console.error('Error sharing:', error);
             alert('Sharing failed. Please try again.');
         }
+    }
+
+    showInputScreen() {
+        // Show the controls (age/gender selection), hide results
+        document.querySelector('.controls').classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+        this.resultsContainer.innerHTML = '';
     }
 }
 
