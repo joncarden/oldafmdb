@@ -131,13 +131,30 @@ class FilmAgeApp {
 
     showLoading() {
         this.resultsContainer.innerHTML = `
-            <div class="animate-pulse flex flex-col items-center gap-6 py-12">
-                <div class="w-24 h-24 rounded-full bg-white/10 mb-4"></div>
-                <div class="h-6 w-2/3 rounded bg-white/10"></div>
-                <div class="h-4 w-1/2 rounded bg-white/10"></div>
-                <div class="h-4 w-1/3 rounded bg-white/10"></div>
+            <div class="flex flex-col items-center gap-6 py-12">
+                <div class="h-6 w-2/3 rounded bg-white/10 mb-2"></div>
+                <div class="h-4 w-1/2 rounded bg-white/10 mb-2"></div>
+                <div class="h-4 w-1/3 rounded bg-white/10 mb-2"></div>
+                <div id="typewriter" class="mt-8 text-white text-center text-base font-mono opacity-80"></div>
             </div>
         `;
+        this.typeTypewriter("digging through IMDB. this is hard. should be done in 10 seconds.");
+    }
+
+    typeTypewriter(text) {
+        const el = document.getElementById('typewriter');
+        if (!el) return;
+        el.textContent = '';
+        let i = 0;
+        const speed = 28;
+        function type() {
+            if (i < text.length) {
+                el.textContent += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            }
+        }
+        type();
     }
 
     showError(message) {
@@ -202,7 +219,7 @@ class FilmAgeApp {
             if (result.actor.gender === 2) pronoun = 'he';
             
             return `
-                <div class="result-item bg-white/5 rounded-2xl p-6 mb-6 shadow-sm flex flex-col gap-2 items-center" data-index="${index}">
+                <div class="result-item bg-white/5 rounded-2xl p-8 mb-8 shadow-sm flex flex-col gap-2 items-center" data-index="${index}">
                     <div class="result-text text-base text-white text-center">
                         <span class="actor-highlight font-bold">${result.actor.name}</span> was ${result.role.age_at_filming} when ${pronoun} played 
                         <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> <span class="year-highlight text-gray-400">(${result.movie.release_year})</span>
