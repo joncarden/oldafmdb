@@ -138,7 +138,7 @@ class FilmAgeApp {
                 <div id="typewriter" class="mt-8 text-white text-center text-base font-mono opacity-80"></div>
             </div>
         `;
-        this.typeTypewriter("digging through IMDB. this is actually very hard work. we're talking algorithms and AGI-level stuff. no big deal.should be done in 10 seconds.");
+        this.typeTypewriter("digging through IMDB. this is actually very hard work. we're talking algorithms and AGI-level stuff. no big deal. should be done in 10 seconds.");
     }
 
     typeTypewriter(text) {
@@ -146,7 +146,7 @@ class FilmAgeApp {
         if (!el) return;
         el.textContent = '';
         let i = 0;
-        const speed = 28;
+        const speed = 50;
         function type() {
             if (i < text.length) {
                 el.textContent += text.charAt(i);
