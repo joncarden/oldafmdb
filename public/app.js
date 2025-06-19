@@ -219,7 +219,7 @@ class FilmAgeApp {
             if (result.actor.gender === 2) pronoun = 'he';
             
             return `
-                <div class="result-item bg-white/5 rounded-2xl py-12 px-8 mb-10 shadow-sm flex flex-col items-center max-w-xl mx-auto" data-index="${index}">
+                <div class="result-item bg-white/5 rounded-2xl flex flex-col justify-center items-center min-h-[350px] px-8 mb-10 shadow-sm" data-index="${index}">
                     <div class="result-text text-2xl text-white text-center">
                         <span class="actor-highlight font-bold">${result.actor.name}</span> was ${result.role.age_at_filming} when ${pronoun} played 
                         <span class="character-highlight character-link underline cursor-pointer" data-character="${result.role.character_name}" data-movie="${result.movie.title}" data-actor="${result.actor.name}">${result.role.character_name || 'their character'}</span> in <span class="movie-highlight italic font-bold">${result.movie.title}</span> <span class="year-highlight text-gray-400">(${result.movie.release_year})</span>
